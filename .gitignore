@@ -28,3 +28,4 @@ Thumbs.db
 *.log
 *.tmp
 client/node_modules/
+client_Copy/
