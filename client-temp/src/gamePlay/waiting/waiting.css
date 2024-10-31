@@ -1,0 +1,18 @@
+/* client/src/gamePlay/waiting/WaitingRoom.css */
+.waiting-room {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f0f8ff;
+}
+
+.waiting-room h2 {
+  color: #333;
+}
+
+.waiting-room p {
+  color: #555;
+  font-size: 16px;
+}
