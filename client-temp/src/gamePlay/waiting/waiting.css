@@ -1,18 +1,137 @@
-/* client/src/gamePlay/waiting/WaitingRoom.css */
+body {
+  width: 100%;
+  height: 100%;
+  font-family: 'Open Sans', sans-serif;
+  background: #092756;
+  background: -moz-radial-gradient(0% 100%, ellipse cover, rgba(2, 247, 23, 0.4) 10%, rgba(138, 114, 76, 0) 40%), -moz-linear-gradient(top, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), -moz-linear-gradient(-45deg, #670d10 0%, #092756 100%);
+  background: -webkit-radial-gradient(0% 100%, ellipse cover, rgba(6, 255, 6, 0.4) 10%, rgba(138, 114, 76, 0) 40%), -webkit-linear-gradient(top, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), -webkit-linear-gradient(-45deg, #670d10 0%, #092756 100%);
+  background: -o-radial-gradient(0% 100%, ellipse cover, rgba(104, 128, 138, .4) 10%, rgba(138, 114, 76, 0) 40%), -o-linear-gradient(top, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), -o-linear-gradient(-45deg, #670d10 0%, #092756 100%);
+  background: -ms-radial-gradient(0% 100%, ellipse cover, rgba(104, 128, 138, .4) 10%, rgba(138, 114, 76, 0) 40%), -ms-linear-gradient(top, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), -ms-linear-gradient(-45deg, #670d10 0%, #092756 100%);
+  background: -webkit-radial-gradient(0% 100%, ellipse cover, rgba(104, 128, 138, .4) 10%, rgba(138, 114, 76, 0) 40%), linear-gradient(to bottom, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), linear-gradient(135deg, #670d10 0%, #092756 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#3E1D6D', endColorstr='#092756', GradientType=1);
+}
 .waiting-room {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  background-color: #f0f8ff;
+  height: 100vh; /* Chiếm toàn bộ chiều cao màn hình */
+  color: white; /* Màu chữ */
 }
 
+
 .waiting-room h2 {
-  color: #333;
+  color: #f3f3f3;
 }
 
 .waiting-room p {
   color: #555;
   font-size: 16px;
+}
+
+/* HTML: <div class="loader"></div> */
+.loader {
+  width: 50px;
+  aspect-ratio: 1;
+  display: grid;
+  animation: l14 4s infinite;
+}
+.loader::before,
+.loader::after {    
+  content: "";
+  grid-area: 1/1;
+  border: 8px solid;
+  border-radius: 50%;
+  border-color: red red #0000 #0000;
+  mix-blend-mode: darken;
+  animation: l14 1s infinite linear;
+}
+.loader::after {
+  border-color: #0000 #0000 blue blue;
+  animation-direction: reverse;
+}
+@keyframes l14{ 
+  100%{transform: rotate(1turn)}
+}
+
+/* countdowm */
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  font-family: monospace;
+  background-color: black;
+  overflow: hidden;
+}
+
+.container {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  position: fixed;
+  filter: contrast(20);
+  overflow: hidden;
+}
+
+span {
+  color: rgb(230,255,230);
+  font-size: 8rem;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  line-height: 1;
+  filter: blur(0.2rem);
+  display: block;
+  transition: all 1.5s ease;
+  opacity: 0;
+  filter: blur(0.6rem);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  &:nth-child(1) {
+    animation: letteranim 11s infinite ease;
+    animation-delay: 0s;
+  }
+  &:nth-child(2) {
+    animation: letteranim 11s infinite ease;
+    animation-delay: 1s;
+  }
+  &:nth-child(3) {
+    animation: letteranim 11s infinite ease;
+    animation-delay: 2s;
+  }
+  &:nth-child(4) {
+    animation: letteranim 11s infinite ease;
+    animation-delay: 3s;
+  }
+  &:nth-child(5) {
+    animation: letteranim 11s infinite ease;
+    animation-delay: 4s;
+  }
+}
+
+@keyframes letteranim {
+  0% {
+    opacity: 0;
+    filter: blur(0.6rem);
+  }
+  5% {
+    opacity: 1;
+    filter: blur(0.2rem);
+  }
+  10% {
+    opacity: 1;
+    filter: blur(0.2rem);
+  }
+  20% {
+    opacity: 0;
+    filter: blur(0.6rem);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(0.6rem);
+  }
 }

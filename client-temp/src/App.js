@@ -1,26 +1,34 @@
 import './App.css';
-import io from "socket.io-client";
-import React, { useState, useEffect } from 'react';
+import socket from './socket/socket';
+import React, { useState, useEffect, useRef } from 'react';
 
 import WaitingRoom from './gamePlay/waiting/waiting';
 import GamePlayScreen from './gamePlay/gamePlay/gamePlay';
 
-const socket = io("http://localhost:3001", {
-  transports: ["websocket"],
-  withCredentials: true, // Chuyển thông tin xác thực nếu cần
-}); // Đảm bảo kết nối tới địa chỉ chính xác của server
+
 
 function App() {
+  // joinGame
   const [name, setName] = useState("");
+  const nameRef = useRef(name);
   const [players, setPlayers] = useState([]);
+  const [roomName, setRoomName] = useState("");
+  // waiting
   const [countdown, setCountdown] = useState(5);
   const [waitingMessage, setWaitingMessage] = useState("");
   const [isWaiting, setIsWaiting] = useState(false); // chuyển tới waiting.js
   const [isGameStarted, setIsGameStarted] = useState(false); // đếm ngược
   const [isPlaying, setIsPlaying] = useState(false); // chuyển tới gamePlay.js
+  // gamePlay
+  const [isTurn, setIsTurn] = useState(false);
+  const [index, setIndex] = useState(null);
+  // Finised
   const [isGameFinished, setIsGameFinished] = useState(false);
   const [winner, setWinner] = useState(null);
 
+  useEffect(() => {
+    nameRef.current = name;
+  }, [name]);
   useEffect(() => {
     // Lắng nghe sự kiện thông báo đang chờ
     socket.on("waiting", (message) => {
@@ -29,7 +37,7 @@ function App() {
       setIsWaiting(true); // vào trạng thái chờ
     });
     // Lắng nghe sự kiện khi bắt đầu đếm ngược
-    socket.on("startCountdown", ({ players }) => {
+    socket.on("startCountdown", ({ players, room }) => {
       setPlayers(players);
       setIsGameStarted(true)
       setCountdown(5); // Reset đếm ngược về 5 giây
@@ -43,7 +51,8 @@ function App() {
           setIsWaiting(true); // vào trạng thái chờ
           console.log("Game has started!");
           console.log("Players:", players);
-          
+          console.log("Room:", room);
+          setRoomName(room);
         }
       }, 1000);
     });
@@ -51,6 +60,18 @@ function App() {
     // Lắng nghe sự kiện khi game bắt đầu
     socket.on("gameStart", ({ players }) => {
       console.log("Game has started with players:", players);
+
+      if (nameRef.current === players[0].name) {
+        setIsTurn(true);
+      }
+      console.log("name: ", name, "players[0].name: ", players[0].name);
+
+    });
+
+    // Lắng nghe sự kiện di chuyển
+    socket.on("flipTurn", (index) => {
+      console.log("flipTurn", index);
+      setIndex(index);
     });
 
     // Dọn dẹp khi component bị hủy
@@ -58,6 +79,7 @@ function App() {
       socket.off("waiting");
       socket.off("startCountdown");
       socket.off("gameStart");
+      socket.off("flipTurn");
     };
   }, []);
 
@@ -73,36 +95,54 @@ function App() {
     <div className="App">
       {!isWaiting ? (
         <>
-          <input
-            type="text"
-            placeholder="Enter your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <button onClick={joinGame}>Join Game</button>
+          <div className="login">
+            <h1>Login</h1>
+            <form onSubmit={(e)=> e.preventDefault()} >
+              <input type="text"
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)} />
+              <button onClick={joinGame}  className="btn btn-primary btn-block btn-large">Join Game</button>
+            </form>
+          </div>
           {waitingMessage && <p>{waitingMessage}</p>} {/* Hiển thị thông báo chờ */}
           {players.length === 2 && <p>Game starting in {countdown}s...</p>}
         </>
 
       ) : (
-        <GameBoard 
-        players={players} 
-        isGameStarted={isGameStarted} 
-        isPlaying={isPlaying} 
-        isGameFinished={isGameFinished} 
-        winner={winner} 
-        setIsPlaying={setIsPlaying} 
-        countdown={countdown} 
-      />
+        <GameBoard
+          players={players}
+          isGameStarted={isGameStarted}
+          isPlaying={isPlaying}
+          isGameFinished={isGameFinished}
+          winner={winner}
+          setIsPlaying={setIsPlaying}
+          countdown={countdown}
+          setWinner={setWinner}
+          roomName={roomName}
+          isTurn={isTurn}
+          setIsTurn={setIsTurn}
+          index={index}
+          setIndex={setIndex}
+        />
       )}
     </div>
   );
 }
 
-function GameBoard({ players , isGameStarted, isPlaying, isGameFinished, winner, setIsPlaying , countdown}) {
+function GameBoard({ players, isGameStarted, isPlaying,
+  isGameFinished, winner, setIsPlaying,
+  countdown, setWinner, name, isTurn, setIsTurn, roomName, index , setIndex}) {
   return (
     <div>
-      {isPlaying ? <GamePlayScreen players={players} /> : <WaitingRoom players={players} isGameStarted={isGameStarted}/>}
+      {isPlaying ?
+        <GamePlayScreen players={players} isGameFinished={isGameFinished} setWinner={setWinner}
+          isTurn={isTurn} setIsTurn={setIsTurn} room={roomName} index={index}  setIndex={setIndex}
+        />
+        :
+        <WaitingRoom players={players} isGameStarted={isGameStarted} />
+      }
+
       <button onClick={() => setIsPlaying(!isPlaying)}>
         {isPlaying ? "Leave Game" : "Start Game"}
       </button>

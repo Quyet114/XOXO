@@ -1,24 +1,145 @@
 /* client/src/gamePlay/gamePlay/GamePlayScreen.css */
+body {
+  width: 100%;
+  height: 100%;
+  font-family: 'Open Sans', sans-serif;
+  background: #092756;
+  background: -moz-radial-gradient(0% 100%, ellipse cover, rgba(2, 247, 23, 0.4) 10%, rgba(138, 114, 76, 0) 40%), -moz-linear-gradient(top, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), -moz-linear-gradient(-45deg, #670d10 0%, #092756 100%);
+  background: -webkit-radial-gradient(0% 100%, ellipse cover, rgba(6, 255, 6, 0.4) 10%, rgba(138, 114, 76, 0) 40%), -webkit-linear-gradient(top, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), -webkit-linear-gradient(-45deg, #670d10 0%, #092756 100%);
+  background: -o-radial-gradient(0% 100%, ellipse cover, rgba(104, 128, 138, .4) 10%, rgba(138, 114, 76, 0) 40%), -o-linear-gradient(top, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), -o-linear-gradient(-45deg, #670d10 0%, #092756 100%);
+  background: -ms-radial-gradient(0% 100%, ellipse cover, rgba(104, 128, 138, .4) 10%, rgba(138, 114, 76, 0) 40%), -ms-linear-gradient(top, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), -ms-linear-gradient(-45deg, #670d10 0%, #092756 100%);
+  background: -webkit-radial-gradient(0% 100%, ellipse cover, rgba(104, 128, 138, .4) 10%, rgba(138, 114, 76, 0) 40%), linear-gradient(to bottom, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), linear-gradient(135deg, #670d10 0%, #092756 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#3E1D6D', endColorstr='#092756', GradientType=1);
+}
 .gameplay-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  background-color: #e6ffe6;
+  height: 100vh; /* Chiếm toàn bộ chiều cao màn hình */
+  color: white; /* Màu chữ */
 }
-
 .gameplay-screen h2 {
-  color: #333;
+  color: #f3f3f3;
 }
 
 .game-board {
-  width: 300px;
-  height: 300px;
+  width: 500px;
+  height: 500px;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: #fff;
   border: 2px solid #ccc;
-  margin-top: 20px;
+}
+.board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.status {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 140px);
+  grid-template-rows: repeat(3, 140px);
+  gap: 5px;
+}
+
+.cell {
+  width: 140px;
+  height: 140px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  cursor: pointer;
+  border: 1px solid #8f8f8f;
+  background-color: #f3f3f3;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.cell:hover {
+  background-color: #ccc9c9;
+  color: #fff;
+}
+.cell-image {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+}
+/* count down timer */
+@property --t {
+  syntax: "<number>";
+  initial-value: 20;
+  inherits: true;
+}
+/* won't be needed once Chrome supports round() */
+@property --s {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: true;
+}
+.header-player {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 150%;
+  margin-bottom: 5px;
+  padding: 5px;
+  background-color: #3e3e58;
+  color: white;
+}
+.player{
+  font: 1em sans-serif;
+  color: #ffffff;
+  font-size: x-large;
+  padding: 5px;
+}
+.countdown {
+  /* when Chrome supports round(), this can be simplified */
+  /* more on this rounding trick
+   * https://css-tricks.com/using-absolute-value-sign-rounding-and-modulo-in-css-today/ */
+  --s: calc(var(--t)/1);
+  display: grid;
+  margin: 1em auto;
+  width: 9em;
+  height: 9em;
+  animation: t 20s linear infinite;
+  flex-direction: row;
+}
+.countdown::after {
+  grid-column: 1;
+  grid-row: 1;
+  place-self: center;
+  font: 3em/2 ubuntu mono, consolas, monaco, monospace;
+  counter-reset: s var(--s);
+  content: "0:" counter(s, decimal-leading-zero);
+}
+
+@keyframes t {
+  to {
+    --t: 0 ;
+  }
+}
+svg {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+[r] {
+  fill: none;
+  stroke: rgb(255, 255, 255);
+}
+[r] + [r] {
+  --k: calc(var(--t)/20);
+  transform: rotate(-90deg);
+  stroke-linecap: round;
+  stroke: color-mix(in hsl shorter hue, #21ec5e calc(var(--k)*100%), #3a27e7);
+  stroke-dasharray: var(--k) 1;
 }

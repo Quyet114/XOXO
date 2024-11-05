@@ -27,19 +27,26 @@ function WaitingRoom({ players, isGameStarted }) {
                     clearInterval(interval);
                 }
             }, 1000);
-        }   
+        }
     }, [isGameStarted]);
     return (
         <div className="waiting-room">
             {!isGameStarted ?
                 <>
                     <h2>Waiting for an opponent... {countTime} s</h2>
-                    <p>Please wait while we find someone for you to play with!</p>
+                    <div className="loader"></div>
                 </>
 
                 :
                 <>
                     <h2>Starting... {countDown} s</h2>
+                    <div className="container">
+                        <span>5</span>
+                        <span>4</span>
+                        <span>3</span>
+                        <span>2</span>
+                        <span>1</span>
+                    </div>
                 </>
             }
         </div>
