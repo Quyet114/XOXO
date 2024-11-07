@@ -3,26 +3,21 @@ import React, { useState, useEffect } from 'react';
 import './gamePlay.css';
 import socket from '../../socket/socket';
 
-function GamePlayScreen({ players, isgameFinished, setWinner, isTurn, setIsTurn, room, index, setIndex }) {
+function GamePlayScreen(
+    { players, isgameFinished, setWinner, isTurn,
+        setIsTurn, room, index, setIndex, isPlayer1Turn, setIsPlayer1Turn
+    }
+) {
 
     const [board, setBoard] = useState(Array(9).fill(null));
     const XImage = require('../image/x.png');
     const OImage = require('../image/o.png');
-
+    const [titleFinished, setTitleFinished] = useState("Bạn đã thua");
     useEffect(() => {
-        if (index !== null) {
-            const newBoard = [...board];
-            newBoard[index] = !isTurn ? "X" : "O";
-            setBoard(newBoard);
-            if (isTurn) {
-                setIsTurn(false);
-            } else {
-                setIsTurn(true);
-            }
-
-        }
-
-    }, [index]);
+        const newBoard = [...board];
+        newBoard[index] = !isTurn ? "X" : "O";
+        setBoard(newBoard);
+    }, [isTurn]);
 
     const handleClick = (index) => {
         if (!isTurn) {
@@ -36,12 +31,32 @@ function GamePlayScreen({ players, isgameFinished, setWinner, isTurn, setIsTurn,
         }
     };
     const winner = calculateWinner(board);
-    const status = winner
-        ? `Winner: ${winner}`
-        : `Next player: ${!isTurn ? "X" : "O"}`;
+    useEffect(() => {
+        console.log('winner', winner);
+        if (winner === "X") {
+            setWinner(winner);
+            setTitleFinished("Ban đã chiến thắng");
+            document.getElementById("myModal").style.display = "block";
+        } else if (winner === "O") {
+            setWinner(winner);
+            setTitleFinished("Ban đẫ thua");
+            document.getElementById("myModal").style.display = "block";
+        }
+
+
+    }, [winner]);
+    window.onclick = function (event) {
+        const modal = document.getElementById("myModal");
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
+    };
 
     const renderCell = (index) => (
-        <div className="cell" onClick={() => handleClick(index)}>
+        <div className="cell"
+            onClick={() => handleClick(index)}
+            style={{ pointerEvents: board[index] ? 'none' : 'auto' }}
+        >
             {board[index] && (
                 <img
                     src={board[index] === "X" ? XImage : OImage}
@@ -57,23 +72,39 @@ function GamePlayScreen({ players, isgameFinished, setWinner, isTurn, setIsTurn,
         <div className="gameplay-screen">
             <div className="board">
                 <div className='header-player'>
-                    <div className="player">{players[0].name}</div>
-                    <div className="countdown">
-                        <svg viewBox="-50 -50 100 100" stroke-width="10">
-                            <circle r="45"></circle>
-                            <circle r="45" pathLength="1"></circle>
-                        </svg>
+                    <div className='playerLine'>
+                        <div className="player">{players[0].name}</div>
+                        {isTurn == isPlayer1Turn ? <div className="line"></div> : <div className="lineStart"></div>}
                     </div>
-                    <div className="player">{players[1].name}</div>
-                </div>
+                    <div className="countdown">
 
+                    </div>
+                    <div className='playerLine'>
+                        <div className="player">{players[1].name}</div>
+                        {isTurn != isPlayer1Turn ? <div className="line"></div> : <div className="lineStart"></div>}
+                    </div>
+
+                </div>
 
                 <div className="grid">
                     {Array(9)
                         .fill(null)
                         .map((_, index) => renderCell(index))}
                 </div>
+                <div id="myModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close" onclick="closeModal()">&times;</span>
+                        <div className='title'>{titleFinished}</div>
+                        <p></p>
+                        <div className='button-parent'>
+                            <button className='button'>Đấu lại</button>
+                            <button className='button'>Tìm người khác</button>
+                        </div>
+
+                    </div>
+                </div>
             </div>
+
         </div>
     );
 }

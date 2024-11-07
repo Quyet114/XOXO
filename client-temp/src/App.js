@@ -21,6 +21,7 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false); // chuyển tới gamePlay.js
   // gamePlay
   const [isTurn, setIsTurn] = useState(false);
+  const [isPlayer1Turn, setIsPlayer1Turn] = useState(false);
   const [index, setIndex] = useState(null);
   // Finised
   const [isGameFinished, setIsGameFinished] = useState(false);
@@ -63,6 +64,7 @@ function App() {
 
       if (nameRef.current === players[0].name) {
         setIsTurn(true);
+        setIsPlayer1Turn(true);
       }
       console.log("name: ", name, "players[0].name: ", players[0].name);
 
@@ -72,6 +74,7 @@ function App() {
     socket.on("flipTurn", (index) => {
       console.log("flipTurn", index);
       setIndex(index);
+      setIsTurn((pre) => !pre);
     });
 
     // Dọn dẹp khi component bị hủy
@@ -124,6 +127,8 @@ function App() {
           setIsTurn={setIsTurn}
           index={index}
           setIndex={setIndex}
+          isPlayer1Turn={isPlayer1Turn}
+          setIsPlayer1Turn={setIsPlayer1Turn}
         />
       )}
     </div>
@@ -132,12 +137,14 @@ function App() {
 
 function GameBoard({ players, isGameStarted, isPlaying,
   isGameFinished, winner, setIsPlaying,
-  countdown, setWinner, name, isTurn, setIsTurn, roomName, index , setIndex}) {
+  countdown, setWinner, name, isTurn, setIsTurn, 
+  roomName, index , setIndex, isPlayer1Turn, setIsPlayer1Turn}) {
   return (
     <div>
       {isPlaying ?
         <GamePlayScreen players={players} isGameFinished={isGameFinished} setWinner={setWinner}
           isTurn={isTurn} setIsTurn={setIsTurn} room={roomName} index={index}  setIndex={setIndex}
+          isPlayer1Turn={isPlayer1Turn} setIsPlayer1Turn={setIsPlayer1Turn}
         />
         :
         <WaitingRoom players={players} isGameStarted={isGameStarted} />
