@@ -148,6 +148,7 @@ body {
 
 /* Đường di chuyển */
 .line::before {
+  --s: calc(var(--t)/1);
   content: '';
   position: absolute;
   top: 0;
@@ -155,7 +156,7 @@ body {
   width: 100%;
   height: 100%;
   background-color: #3498db; /* màu của đường di chuyển */
-  animation: moveRight 15s linear infinite;
+  animation: moveRight 20s linear infinite;
 }
 
 @keyframes moveRight {

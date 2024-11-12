@@ -4,8 +4,8 @@ import './gamePlay.css';
 import socket from '../../socket/socket';
 
 function GamePlayScreen(
-    { players, isgameFinished, setWinner, isTurn,
-        setIsTurn, room, index, setIndex, isPlayer1Turn, setIsPlayer1Turn
+    { players, isgameFinished, setWinner, isTurn, setIsPlaying, setIsWaiting, isReplay, setIsReplay,
+        setIsTurn, room, index, setIndex, isPlayer1Turn, setIsPlayer1Turn, setIsGameStarted
     }
 ) {
 
@@ -67,6 +67,36 @@ function GamePlayScreen(
         </div>
     );
 
+    const rePlay = () => {
+        if (isReplay) {
+            socket.emit("gameReplay", room);
+            console.log('chơi lại khi có người chơi khác');
+            setBoard(Array(9).fill(null));
+            setIndex(null);
+            setIsPlaying(false);
+            setWinner(null);
+            document.getElementById("myModal").style.display = "none";
+            setIsReplay(false);
+        } else {
+            setBoard(Array(9).fill(null));
+            socket.emit("SendReplay", room);
+            setIndex(null);
+            setIsPlaying(false);
+            setIsGameStarted(false);
+            setWinner(null);
+            document.getElementById("myModal").style.display = "none";
+            console.log('chơi lại khi không có người chơi khác');
+        }
+    };
+
+
+    // tìm kiếm người chơi khác
+    const findOther = () => {
+        socket.emit("findOther", room);
+        console.log("findOther - Joining game...");
+
+    }
+
 
     return (
         <div className="gameplay-screen">
@@ -93,12 +123,12 @@ function GamePlayScreen(
                 </div>
                 <div id="myModal" class="modal">
                     <div class="modal-content">
-                        <span class="close" onclick="closeModal()">&times;</span>
+                        <span class="close" onClick={() => document.getElementById("myModal").style.display = "none"}>&times;</span>
                         <div className='title'>{titleFinished}</div>
                         <p></p>
                         <div className='button-parent'>
-                            <button className='button'>Đấu lại</button>
-                            <button className='button'>Tìm người khác</button>
+                            <button className='button' onClick={() => rePlay()}>Đấu lại</button>
+                            <button className='button' onClick={()=> findOther()}>Tìm người khác</button>
                         </div>
 
                     </div>
@@ -126,6 +156,5 @@ const calculateWinner = (squares) => {
             return squares[a];
         }
     }
-    return null;
 };
 export default GamePlayScreen;

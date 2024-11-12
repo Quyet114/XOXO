@@ -7,54 +7,117 @@ const path = require("path"); // Import thư viện path
 const cors = require("cors"); // Import thư viện cors
 const app = express(); // Tạo một ứng dụng express
 const server = http.createServer(app); // Tạo một server HTTP từ ứng dụng express
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
-}); // Tạo một server socket.io từ server HTTP với cấu hình CORS
+const io = new Server(server); // Tạo một server socket.io từ server HTTP
 
 // Middleware để xử lý CORS
 app.use(cors());
 
-let waitingPlayer = null; // Biến lưu trữ người chơi đang đợi
+let waitingPlayers = []; // Biến lưu trữ người chơi đang đợi
+let roomName = [{}]; // Biến lưu trữ tên phòng
+
 
 io.on("connection", (socket) => { // Lắng nghe sự kiện kết nối từ client
   console.log("A user connected:", socket.id); // In ra console khi có người dùng kết nối
-
+  // kết nối người chơi
   socket.on("joinGame", (name) => { // Lắng nghe sự kiện "joinGame" từ client
-    // Nếu chưa có người đợi, đặt người chơi vào hàng chờ
-    if (!waitingPlayer) {
-      waitingPlayer = { id: socket.id, name }; // Lưu thông tin người chơi vào biến waitingPlayer
-      socket.emit("waiting", "Waiting for an opponent..."); // Gửi thông báo cho người chơi rằng đang đợi đối thủ
-    } else {
-      // Ghép người chơi đang đợi và người chơi mới vào cùng một phòng
-      const roomName = `room-${waitingPlayer.id}-${socket.id}`; // Tạo tên phòng từ id của hai người chơi
-      socket.join(roomName); // Thêm người chơi mới vào phòng
+    waitingPlayers.push({ id: socket.id, name }); // Thêm người chơi vào hàng chờ
+    socket.emit("waiting", "Waiting for an opponent..."); // Gửi thông báo cho người chơi rằng đang đợi đối thủ
 
-      const waitingSocket = io.sockets.sockets.get(waitingPlayer.id);
+
+    if (waitingPlayers.length === 2) {
+      const [player1, player2] = waitingPlayers; // Lấy thông tin hai người chơi
+      roomName = `room-${player1.id}-${player2.id}`; // Tạo tên phòng từ id của hai người chơi
+
+      // Thêm cả hai người chơi vào cùng một phòng
+      //socket.join(roomName); // Gọi socket.join() cho người chơi mới
+      const waitingSocket = io.sockets.sockets.get(player1.id);
       if (waitingSocket) {
-        waitingSocket.join(roomName); // Thêm người chơi đợi vào phòng
+        waitingSocket.join(roomName); // Gọi join() cho người chơi đang chờ
+        console.log("player1.id", player1.id);
+        
       }
-      io.to(waitingPlayer.id).emit("startCountdown", { players: [{ id: waitingPlayer.id, name: waitingPlayer.name }, { id: socket.id, name }] }); // Gửi sự kiện "startCountdown" cho người chơi đang đợi
-      io.to(socket.id).emit("startCountdown", { players: [{ id: waitingPlayer.id, name: waitingPlayer.name }, { id: socket.id, name }] }); // Gửi sự kiện "startCountdown" cho người chơi mới
+      const waitingSocket1 = io.sockets.sockets.get(player2.id);
+      if (waitingSocket1) {
+        waitingSocket1.join(roomName); // Gọi join() cho người chơi đang chờ
+        console.log("player1.id", player1.id);
+      }
+
+      io.to(roomName).emit("startCountdown", {
+        players: [
+          { id: player1.id, name: player1.name },
+          { id: player2.id, name: player2.name },
+        ],
+        room: roomName,
+      });
+
+      // Đếm ngược 5 giây
 
       setTimeout(() => {
-        io.to(waitingPlayer.id).emit("gameStart", { players: [{ id: waitingPlayer.id, name: waitingPlayer.name }, { id: socket.id, name }] }); // Gửi sự kiện "gameStart" cho người chơi đang đợi
-        io.to(socket.id).emit("gameStart", { players: [{ id: waitingPlayer.id, name: waitingPlayer.name }, { id: socket.id, name }] }); // Gửi sự kiện "gameStart" cho người chơi mới
-      }, 5500); // đếm ngược 5s
+        io.to(roomName).emit("gameStart", {
+          players: [{ id: player1.id, name: player1.name }, { id: player2.id, name: player2.name }],
+        });
 
-      waitingPlayer = null; // Reset hàng đợi
+        waitingPlayers = []; // Reset hàng đợi sau khi bắt đầu game
+      }, 5000);
     }
   });
 
-  socket.on("disconnect", () => { // Lắng nghe sự kiện ngắt kết nối từ client
-    if (waitingPlayer && waitingPlayer.id === socket.id) {
-      waitingPlayer = null; // Reset hàng đợi nếu người chơi đợi rời đi    
-    }
-    console.log("User disconnected:", socket.id); // In ra console khi có người dùng ngắt kết nối
+  // Xử lý sự kiện di chuyển
+  socket.on("move", ({ index, room }) => {
+    // console.log("move", { index, room });
+    // socket.to(room).emit("flipTurn", index);
+    // lấy người chơi có trong room
+    const players = io.sockets.adapter.rooms.get(room);
+    const [player1, player2] = [...players];
+    socket.to(player1).to(player2).emit("flipTurn", index);
   });
+
+  // Xử lý sự kiện rePlay
+
+  socket.on("gameReplay", (room) => {
+    const players = io.sockets.adapter.rooms.get(room);
+    if (players) {
+      io.to(room).emit("gameReStart", {
+        players: Array.from(players).map((playerId) => {
+          const playerSocket = io.sockets.sockets.get(playerId);
+          return { id: playerSocket.id, name: playerSocket.name };
+        }),
+      });
+    }
+  });
+  
+  socket.on("SendReplay", (room) => {
+    const players = io.sockets.adapter.rooms.get(room);
+    if (players) {
+      io.to(room).emit("rePlay", {
+        players: Array.from(players).map((playerId) => {
+          const playerSocket = io.sockets.sockets.get(playerId);
+          return { id: playerSocket.id, name: playerSocket.name };
+        }),
+      });
+    }
+  });
+
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  
+    // Remove the user from the waitingPlayers list
+    waitingPlayers = waitingPlayers.filter(player => player.id !== socket.id);
+    socket.broadcast.to(room).emit("playerLeft", {
+      message: "A user has disconnected from the room",
+      socketId: socket.id, // ID của socket bị ngắt kết nối
+    });
+  });
+  
+  
+  
+  
+
 });
+
+// 
+
 
 app.use(express.static(path.join(__dirname, "../client/build"))); // Sử dụng thư mục tĩnh để phục vụ các file tĩnh từ thư mục build của client
 
